@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>oscilloscope-music</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kelly+Slab&family=Stalinist+One&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Kelly Slab', cursive;
+            margin: 40px;
+        }
+
+        h1 {
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            text-align: center;
+            font-size: 36px;
+        }
+
+        h2 {
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            border-top: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+
+        a {
+            color: #00ff00;
+            text-decoration: underline;
+        }
+
+        a:hover {
+            background-color: #00ff00;
+            color: black;
+        }
+
+        hr {
+            border: 1px solid #00ff00;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .terminal {
+            font-size: 20px;
+            line-height: 2;
+            margin: 30px 0;
+            min-height: 350px;
+            font-family: 'Kelly Slab', cursive;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+        }
+
+        .input-container {
+            margin-top: 30px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .terminal-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 35px;
+            background-color: black;
+            border: none;
+        }
+
+        #pageInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            color: transparent;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            outline: none;
+            z-index: 2;
+            cursor: default;
+        }
+
+        .cursor {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            z-index: 1;
+        }
+
+        .display-char {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            color: black;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            line-height: 35px;
+            background-color: #00ff00;
+            z-index: 3;
+            display: none;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .error-message {
+            color: #ff5555;
+            margin-top: 10px;
+            font-size: 18px;
+            display: none;
+        }
+
+        table {
+        border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid #00ff00;
+        }
+
+        td, th {
+            padding: 10px;
+        }
+
+        .frame-box {
+            border: 2px solid #00ff00;
+            padding: 10px;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .aspect-16-9 {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+        }
+
+        .aspect-16-9 iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: black;
+        }
+
+        .caption {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .epoch {
+            background: rgba(0, 30, 0, 0.5);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .card {
+            background: rgba(0, 30, 0, 0.3);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .year {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            border-bottom: 2px solid #00ff00;
+            display: inline-block;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .inventor {
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 3px solid #00ff00;
+            padding: 8px 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff00;
+            text-align: center;
+            font-size: 14px;
+            color: #00aa00;
+        }
+
+        .epoch:hover, .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 255, 0, 0.4);
+            border-color: #88ff88;
+            background: rgba(0, 50, 0, 0.6);
+        }
+
+            .video-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .video-card {
+            background-color: black;
+            border: 5px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px 15px 15px 15px;
+            width: 400px;
+            box-shadow: 0 0 15px #00ff00;
+            text-align: center;
+        }
+
+        .video-caption {
+            color: #00ff00;
+            font-family: 'Stalinist One', cursive;
+            margin-top: 15px;
+            font-size: 18px;
+            border-top: 1px dashed #00ff00;
+            padding-top: 10px;
+        }
+
+        .video-card video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <h1>OSCILLOSCOPE-MUSIC</h1>
+
+    <hr>
+
+    <div class="caption">
+        <p>
+        <a href="index.html">[ ГЛАВНАЯ ]</a> |
+        <a href="content.html">[ ОГЛАВЛЕНИЕ ]</a> |
+        <a href="howork.html">[ КАК РАБОТАЕТ ОСЦИЛЛОГРАФ ]</a> |
+        <a href="myexp.html">[ МОЁ ЗНАКОМСТВО ]</a> |
+        <a href="history.html">[ ИСТОРИЯ ]</a> |
+        <a href="visual.html">[ ВИЗУАЛИЗАТОР ]</a>
+        </p>
+    </div>
+
+    <hr>
+
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">Что такое осциллограф?</div>
+            <p>Осциллограф (устаревшее название — осциллоскоп) — это прибор, который показывает электрические сигналы и рисует график напряжения.</p>
+        </div>
+    </div>
+
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">Как это работает?</div>
+            <p>На экране осциллографа мы видим линию. Если сигнала нет — это прямая линия.
+                Если есть звук или какой-то сигнал — линия начинает колебаться.
+                Чем сильнее сигнал, тем больше размах волны. Чем выше частота, тем чаще волны.</p>
+        </div>
+
+    </div>
+
+    <div class="video-row">
+        <div class="video-card">
+            <h3>Пример №1</h3>
+            <video controls>
+                <source src="Jerobeam Fenderson - Spirals - Jellybean Fenderson (360p, h264).mp4" type="video/mp4">
+                Твой браузер не поддерживает видео
+            </video>
+            <div class="video-caption">
+                видео взято с канала jelobeam fenderson<br>
+            </div>
+        </div>
+        <div class="video-card">
+            <h3>Пример №2</h3>
+            <video controls>
+                <source src="Shrooms on N313 soviet oscilloscope.mp4" type="video/mp4">
+                Твой браузер не поддерживает видео
+            </video>
+            <div class="video-caption">
+                видео взято с канала Gábor Csiszér<br>
+            </div>
+        </div>
+        <div class="video-card">
+            <h3>Пример №3</h3>
+            <video controls>
+                <source src="Aloboi - Give Me More (Just Rawer) {Gonio Visual}.mp4" type="video/mp4">
+                Твой браузер не поддерживает видео
+            </video>
+            <div class="video-caption">
+                видео взято с канала Aloboi<br>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+</body>
+</html>
