@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>oscilloscope-music - история</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kelly+Slab&family=Stalinist+One&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Kelly Slab', cursive;
+            margin: 40px;
+        }
+        
+        h1 {
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            text-align: center;
+            font-size: 36px;
+        }
+        
+        h2 {
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            border-top: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+        
+        a {
+            color: #00ff00;
+            text-decoration: underline;
+        }
+        
+        a:hover {
+            background-color: #00ff00;
+            color: black;
+        }
+        
+        hr {
+            border: 1px solid #00ff00;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        .terminal {
+            font-size: 20px;
+            line-height: 2;
+            margin: 30px 0;
+            min-height: 350px;
+            font-family: 'Kelly Slab', cursive;
+        }
+        
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+        }
+        
+        .input-container {
+            margin-top: 30px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .terminal-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 35px;
+            background-color: black;
+            border: none;
+        }
+        
+        #pageInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            color: transparent;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            outline: none;
+            z-index: 2;
+            cursor: default;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            z-index: 1;
+        }
+        
+        .display-char {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            color: black;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            line-height: 35px;
+            background-color: #00ff00;
+            z-index: 3;
+            display: none;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .error-message {
+            color: #ff5555;
+            margin-top: 10px;
+            font-size: 18px;
+            display: none;
+        }
+        
+        table {
+        border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid #00ff00;
+        }
+
+        td, th {
+            padding: 10px;
+        }
+        
+        .frame-box {
+            border: 2px solid #00ff00;
+            padding: 10px;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .aspect-16-9 {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+        }
+
+        .aspect-16-9 iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: black;
+        }
+
+        .caption {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .epoch {
+            background: rgba(0, 30, 0, 0.5);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .card {
+            background: rgba(0, 30, 0, 0.3);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .year {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            border-bottom: 2px solid #00ff00;
+            display: inline-block;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+        
+        .inventor {
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 3px solid #00ff00;
+            padding: 8px 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff00;
+            text-align: center;
+            font-size: 14px;
+            color: #00aa00;
+        }
+        
+        .epoch:hover, .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 255, 0, 0.4);
+            border-color: #88ff88;
+            background: rgba(0, 50, 0, 0.6);
+        }
+
+            .video-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+        
+        .video-card {
+            background-color: black;
+            border: 5px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px 15px 15px 15px;
+            width: 400px;
+            box-shadow: 0 0 15px #00ff00;
+            text-align: center;
+        }
+        
+        .video-caption {
+            color: #00ff00;
+            font-family: 'Stalinist One', cursive;
+            margin-top: 15px;
+            font-size: 18px;
+            border-top: 1px dashed #00ff00;
+            padding-top: 10px;
+        }
+        
+        .video-card video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <h1>OSCILLOSCOPE-MUSIC</h1>
+
+    <hr>
+
+    <div class="caption">
+        <p>
+        <a href="index.html">[ ГЛАВНАЯ ]</a> | 
+        <a href="content.html">[ ОГЛАВЛЕНИЕ ]</a> | 
+        <a href="howork.html">[ КАК РАБОТАЕТ ОСЦИЛЛОГРАФ ]</a> | 
+        <a href="myexp.html">[ МОЁ ЗНАКОМСТВО ]</a> | 
+        <a href="history.html">[ ИСТОРИЯ ]</a> | 
+        <a href="visual.html">[ ВИЗУАЛИЗАТОР ]</a>
+        </p>
+    </div>
+
+    <hr>
+
+
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">Предтечи (1879–1897)</div>
+            <p>Всё началось с <strong>гальванометра</strong> и чернильных самописцев, которые могли фиксировать медленные изменения тока. 
+            Но настоящий прорыв случился, когда <strong>Карл Фердинанд Браун</strong> (Nobel Prize 1909) модифицировал катодно-лучевую трубку. 
+            В 1897 году он создал первый катодно-лучевой осциллограф — устройство, которое могло отображать электрические сигналы в реальном времени. 
+            Это было рождение «глаза электроники».</p>
+            <div class="inventor">Карл Браун · Катодно-лучевая трубка (CRT)</div>
+        </div>
+
+        <div class="epoch">
+            <div class="year">Эра аналоговых приборов (1920–1940)</div>
+            <p>В 1920-х годах компания <strong>General Radio</strong> и <strong>Westinghouse</strong> выпустили первые коммерческие осциллографы.
+            Они были громоздкими, с электронно-лучевыми трубками низкого напряжения, но позволили инженерам радиосвязи «увидеть» радиоволны. 
+            К 1930-м годам <strong>Allen B. DuMont</strong> начал массовое производство доступных лабораторных осциллографов, превратив их из музейного экспоната в незаменимый инструмент.
+            Во время Второй мировой войны осциллографы использовались для радиолокации — они буквально помогли выиграть техническую гонку.</p>
+            <div class="inventor">DuMont Laboratories · Первые промышленные модели</div>
+        </div>
+
+        <div class="epoch">
+            <div class="year">Золотой век: Tektronix и триггер (1950–1970)</div>
+            <p>Компания <strong>Tektronix</strong> (основана в 1946) совершила переворот, представив в 1947 году модель <strong>511</strong> — первый осциллограф со стабильным синхронизированным триггером.
+            До этого сигналы «плавали» на экране. Технология синхронизации позволила получать устойчивую картину даже сложных сигналов. 
+            В 1960-х появились портативные модели и первые осциллографы с полосой пропускания 100 МГц. Лампы сменились транзисторами, а экраны стали ярче и точнее. 
+            Tektronix 465 (1972) стал легендой — его можно было встретить в каждой лаборатории мира.</p>
+            <div class="inventor">Tektronix · Изобретение триггера развертки</div>
+        </div>
+
+        <div class="epoch">
+            <div class="year">Цифровая революция (1980–2000)</div>
+            <h3>Цифровая революция: запоминание и анализ</h3>
+            <p>С развитием АЦП и микропроцессоров появились <strong>цифровые запоминающие осциллографы (DSO)</strong>. Больше не нужен был фосфорный экран — сигнал можно сохранить, масштабировать, измерить автоматически.
+            Компании <strong>Hewlett-Packard (ныне Keysight)</strong>, <strong>LeCroy</strong> и <strong>Tektronix</strong> представили модели с возможностью математической обработки, БПФ, последовательными интерфейсами.
+            Осциллограф перестал быть просто «рисовальщиком» сигналов, превратившись в мощный анализатор. В конце 90-х цифровые осциллографы достигли полосы в гигагерцы.</p>
+            <div class="inventor">DSO · Цифровая память и автоматические измерения</div>
+        </div>
+
+        <div class="epoch">
+            <div class="year">Современность (2000 – настоящее время)</div>
+            <h3>Осциллограф в кармане и виртуализация</h3>
+            <p>Современные осциллографы — это <strong>микшированные сигнальные анализаторы (MSO)</strong> с гигасемплами в секунду, огромными ёмкостями памяти, сенсорными экранами.
+            Появились USB-осциллографы-приставки, а также программно-определяемые приборы. Сегодня любой студент может использовать портативный осциллограф за сотни долларов, 
+            тогда как 60 лет назад он стоил как автомобиль. Будущее — за глубокой интеграцией с AI, автоматическим распознаванием протоколов и облачным удалённым доступом.</p>
+            <div class="inventor">Модели: R&S, Keysight, Picoscope, а также Open Source проекты</div>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <div class="card">
+            <h4>Самый быстрый осциллограф (2025 год)</h4>
+            <ul>
+                <li>Модель: Keysight UXR
+                <li>Полоса пропускания: более 200 ГГц
+                <li>Разрешение: события длительностью в несколько пикосекунд
+                <li>Применение: оптические чипы, квантовые коммуникации
+            </ul>
+        </div>
+
+        <div class="card">
+            <h4>Культовые модели</h4>
+            <ul>
+                <li>Tektronix 511 (1947) — первый с калиброванным триггером
+                <li>HP 1740A (1970-е) — аналоговый прибор с курсорами
+                <li>Rigol DS1054Z — доступный цифровой осциллограф для энтузиастов
+            </ul>
+        </div>
+
+        <div class="card">
+            <h4>Принцип работы (базово)</h4>
+            <ul>
+                <li>Аналоговый: входной сигнал управляет вертикальным отклонением луча, 
+                    генератор развёртки создаёт пилообразное напряжение («растягивает» сигнал во времени)
+                <li>Цифровой: АЦП дискретизирует сигнал, процессор строит график на дисплее
+            </ul>
+        </div>
+
+        <div class="card">
+            <h4>Влияние на науку и технику</h4>
+            <ul>
+                <li>Позволили создать телевидение, радары, компьютеры, мобильную связь
+                <li>Без визуализации сигналов невозможна современная электроника
+                <li>Ричард Фейнман: осциллограф — «окно в душу электричества»
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+</body>
+</html>
