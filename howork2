@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>oscilloscope-music - как работает(2)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kelly+Slab&family=Stalinist+One&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Kelly Slab', cursive;
+            margin: 40px;
+        }
+        
+        h1 {
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            text-align: center;
+            font-size: 36px;
+        }
+        
+        h2 {
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            border-top: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+        
+        a {
+            color: #00ff00;
+            text-decoration: underline;
+        }
+        
+        a:hover {
+            background-color: #00ff00;
+            color: black;
+        }
+        
+        hr {
+            border: 1px solid #00ff00;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        .terminal {
+            font-size: 20px;
+            line-height: 2;
+            margin: 30px 0;
+            min-height: 350px;
+            font-family: 'Kelly Slab', cursive;
+        }
+        
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+        }
+        
+        .input-container {
+            margin-top: 30px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .terminal-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 35px;
+            background-color: black;
+            border: none;
+        }
+        
+        #pageInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            color: transparent;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            outline: none;
+            z-index: 2;
+            cursor: default;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            z-index: 1;
+        }
+        
+        .display-char {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            color: black;
+            font-family: 'Kelly Slab', cursive;
+            font-size: 22px;
+            text-align: center;
+            line-height: 35px;
+            background-color: #00ff00;
+            z-index: 3;
+            display: none;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .error-message {
+            color: #ff5555;
+            margin-top: 10px;
+            font-size: 18px;
+            display: none;
+        }
+        
+        table {
+        border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid #00ff00;
+        }
+
+        td, th {
+            padding: 10px;
+        }
+        
+        .frame-box {
+            border: 2px solid #00ff00;
+            padding: 10px;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .aspect-16-9 {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+        }
+
+        .aspect-16-9 iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: black;
+        }
+
+        .caption {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .epoch {
+            background: rgba(0, 30, 0, 0.5);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .card {
+            background: rgba(0, 30, 0, 0.3);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .year {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Stalinist One', sans-serif;
+            color: #00ff00;
+            border-bottom: 2px solid #00ff00;
+            display: inline-block;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+        
+        .inventor {
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 3px solid #00ff00;
+            padding: 8px 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #00ff00;
+            text-align: center;
+            font-size: 14px;
+            color: #00aa00;
+        }
+        
+        .epoch:hover, .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 255, 0, 0.4);
+            border-color: #88ff88;
+            background: rgba(0, 50, 0, 0.6);
+        }
+
+            .video-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+        
+        .video-card {
+            background-color: black;
+            border: 5px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px 15px 15px 15px;
+            width: 400px;
+            box-shadow: 0 0 15px #00ff00;
+            text-align: center;
+        }
+        
+        .video-caption {
+            color: #00ff00;
+            font-family: 'Stalinist One', cursive;
+            margin-top: 15px;
+            font-size: 18px;
+            border-top: 1px dashed #00ff00;
+            padding-top: 10px;
+        }
+        
+        .video-card video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body link="green">
+    <h1>OSCILLOSCOPE-MUSIC</h1>
+
+    <hr>
+
+    <div class="caption">
+        <p>
+        <a href="index.html">[ ГЛАВНАЯ ]</a> | 
+        <a href="content.html">[ ОГЛАВЛЕНИЕ ]</a> | 
+        <a href="howork.html">[ КАК РАБОТАЕТ ОСЦИЛЛОГРАФ ]</a> | 
+        <a href="myexp.html">[ МОЁ ЗНАКОМСТВО ]</a> | 
+        <a href="history.html">[ ИСТОРИЯ ]</a> | 
+        <a href="visual.html">[ ВИЗУАЛИЗАТОР ]</a>
+        </p>
+    </div>
+
+    <hr>
+
+    <h2>Что это такое?</h2>
+
+    <p>Осциллограф - прибор, который показывает, как напряжение (U) меняется во времени (t) или зависит от другого напряжения.</p>  
+
+    <h2>Второй режим работы осциллографа: Режим XY — «Напряжение от напряжения»</h2>
+
+    <h1>Как он устроен (простыми словами)</h1>
+
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">1. Два входа сигнала</div>
+            <p>Используются два канала осциллографа.</p>
+            <p>Один сигнал подаётся на вход X, второй — на вход Y.</p>
+        </div>
+    </div>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">2. Горизонталь (X, или «Влево-вправо»)</div>
+            <p>Положение луча по горизонтали зависит от сигнала X.</p>
+            <p>Чем выше напряжение — тем правее точка.</p>
+        </div>
+    </div>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">3. Вертикаль (Y, или «Вверх-вниз»)</div>
+            <p>Положение луча по вертикали зависит от сигнала Y.</p>
+            <p>Чем выше напряжение — тем выше точка.</p>
+        </div>
+    </div>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">4. Главное отличие от обычного режима</div>
+            <p>Развёртка по времени отключена.</p>
+            <p>Луч не движется сам — его движение полностью задают сигналы.</p>
+        </div>
+    </div>
+    
+    <hr>
+    
+    <h3>Что происходит на экране</h3>
+    
+    <ul>
+        <li>Осциллограф рисует фигуры, а не график</li>
+        <li>Форма зависит от соотношения сигналов</li>
+        <li>Можно увидеть круги, эллипсы, «восьмёрки» и сложные узоры</li>
+    </ul>
+    
+    <hr>
+
+    <h1>Где применяется</h1>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">1. Фигуры Лиссажу</div>
+            <p>Используются для сравнения частот сигналов</p>
+            <p>По форме фигуры можно определить соотношение частот</p>
+        </div>
+    </div>
+
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">2. Визуализация сигналов</div>
+            <p>Используется для создания изображений с помощью звука</p>
+            <p>Один канал управляет X, второй — Y</p>
+        </div>
+    </div>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">3. Дополнительный вход (Z)</div>
+            <p>Управляет яркостью луча</p>
+            <p>Позволяет включать и выключать отображение линии</p>
+            <p>Используется для более точного рисования без лишних линий</p>
+        </div>
+    </div>
+
+    <hr>
+    
+    <h1>Сравнение режимов</h1>
+    <table border="1">
+    <tr>
+        <th>Параметр</th>
+        <th>Обычный режим (Y–t)</th>
+        <th>Режим XY</th>
+    </tr>
+    <tr>
+        <td>Горизонталь</td>
+        <td>Время</td>
+        <td>Сигнал X</td>
+    </tr>
+    <tr>
+        <td>Вертикаль</td>
+        <td>Сигнал</td>
+        <td>Сигнал Y</td>
+    </tr>
+    <tr>
+        <td>Результат</td>
+        <td>График</td>
+        <td>Фигуры</td>
+    </tr>
+    </table>
+
+    <hr>
+
+    <dl>Итог по режиму XY:
+    <dt><ol><li>Горизонталь = сигнал X
+    <dt><li>Вертикаль = сигнал Y
+    <dt><li>Развёртка = отсутствует
+    </dl></ol>
+    
+    <div class="timeline">
+        <div class="epoch">
+            <div class="year">Важно</div>
+            <p>В режиме XY луч может долго находиться в одной точке.
+                При высокой яркости это может повредить экран, поэтому яркость уменьшают.</p>
+        </div>
+    </div>
+    
+    <a href="howork.html">ВЕРНУТЬСЯ В ПЕРВУЮ ЧАСТЬ:</a>
+
+    <hr>
+</body>
+</html>
